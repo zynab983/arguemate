@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  points    Int      @default(0)
+  rank      String   @default("Novice")
+  debates   Debate[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Debate {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  category   String    @default("General")
+  stance     String    // "FOR" or "AGAINST"
+  difficulty String    @default("Medium") // "Easy", "Medium", "Hard"
+  status     String    @default("ACTIVE") // "ACTIVE", "COMPLETED"
+  messages   Message[]
+  score      Int?      // AI assessment score (0-100)
+  feedback   String?   // AI overall feedback summary
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  debateId  String
+  debate    Debate   @relation(fields: [debateId], references: [id], onDelete: Cascade)
+  role      String   // "user" or "assistant" (AI)
+  content   String
+  score     Int?     // Quality score for this turn
+  feedback  String?  // Critique for this turn
+  createdAt DateTime @default(now())
+}
