@@ -7,13 +7,14 @@ import {
   History, Calendar, Clock, Trophy, Bot, Zap, Brain, Heart,
   Swords, Scale, GraduationCap, Coffee, Landmark, Mic, Loader2,
   Plus, X, MessageSquare, Target, Star, CheckCircle2,
-  XCircle, Lightbulb, AlertTriangle, ChevronRight, User, BarChart2,
+  XCircle, Lightbulb, AlertTriangle, ChevronRight, User, BarChart2, Share2,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import ShareTranscriptModal from '@/components/ShareTranscriptModal';
 
 function formatDuration(seconds: number): string {
   if (!seconds) return '—';
@@ -64,6 +65,7 @@ function ReplayModal({ debate, onClose }: { debate: any; onClose: () => void }) 
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'transcript' | 'analysis'>('transcript');
+  const [showShare, setShowShare] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -234,7 +236,37 @@ function ReplayModal({ debate, onClose }: { debate: any; onClose: () => void }) 
             </div>
           )}
         </div>
+
+        {/* Share Transcript footer */}
+        <div className="shrink-0 border-t border-border px-6 py-3">
+          <button
+            id="history-share-transcript-btn"
+            onClick={() => setShowShare(true)}
+            disabled={loading || messages.length === 0}
+            className="w-full flex items-center justify-center gap-2 rounded-input border border-border bg-surface-2 px-4 py-2 text-xs font-semibold text-text-secondary hover:text-text hover:bg-surface hover:border-border-strong transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
+          >
+            <Share2 className="h-3.5 w-3.5" /> Share Transcript
+          </button>
+        </div>
       </div>
+
+      {/* Share Modal */}
+      {showShare && (
+        <ShareTranscriptModal
+          messages={messages.map((m: any) => ({ role: m.role, content: m.content }))}
+          meta={{
+            topic: debate.topic,
+            difficulty: debate.difficulty,
+            debateStyle: debate.debate_style,
+            aiPersonality: debate.ai_personality,
+            score: debate.score,
+            grade: debate.grade,
+            winner: debate.winner,
+            duration: debate.duration,
+          }}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 }

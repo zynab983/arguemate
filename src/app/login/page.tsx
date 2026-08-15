@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import { Award, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Input, FieldLabel } from '@/components/ui/Input';
 import { ErrorState } from '@/components/ui/EmptyState';
@@ -108,11 +108,9 @@ function LoginContent() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-text">
-              <Award className="h-4 w-4 text-text-inverse" />
-            </span>
+            <img src="/logo.png" alt="EdQuanta" className="h-9 w-9 object-contain shrink-0" />
             <span className="text-lg font-semibold tracking-tight text-text">
-              ArgueMate
+              EdQuanta
             </span>
           </Link>
           <h2 className="text-subheading text-text">Welcome back</h2>

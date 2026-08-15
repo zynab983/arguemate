@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Award } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -9,11 +8,9 @@ export default function Footer() {
           {/* Logo and Info */}
           <div className="md:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-text">
-                <Award className="h-4 w-4 text-text-inverse" />
-              </span>
+              <img src="/logo.png" alt="EdQuanta" className="h-8 w-8 object-contain shrink-0" />
               <span className="text-sm font-semibold text-text tracking-tight">
-                ArgueMate
+                EdQuanta
               </span>
             </Link>
             <p className="text-sm text-text-secondary max-w-sm leading-relaxed">
@@ -70,7 +67,7 @@ export default function Footer() {
 
         <div className="mt-10 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-caption text-text-muted">
-            &copy; {new Date().getFullYear()} ArgueMate AI. All rights reserved.
+            © {new Date().getFullYear()} EdQuanta AI. All rights reserved.
           </p>
           <div className="flex gap-6">
             <span className="text-caption text-text-muted hover:text-text-secondary cursor-pointer">Privacy Policy</span>

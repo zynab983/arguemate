@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ragRetrieve } from '@/lib/rag';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
       messages,
       isOpening,
       userStance,
+      useKnowledgeBase = false,
+      userId,
+      language = 'English',
     } = body;
 
     if (!process.env.GEMINI_API_KEY) {
@@ -60,14 +64,35 @@ export async function POST(request: NextRequest) {
     const personalityPrompt = PERSONALITY_PROMPTS[aiPersonality] || PERSONALITY_PROMPTS['Logical'];
     const stylePrompt = STYLE_PROMPTS[debateStyle] || STYLE_PROMPTS['Formal'];
     const difficultyPrompt = DIFFICULTY_PROMPTS[difficulty] || DIFFICULTY_PROMPTS['Intermediate'];
+    const languagePrompt = language && language !== 'English'
+      ? `LANGUAGE: Write your ENTIRE response in ${language}, using natural, everyday ${language} the way a native speaker would actually talk — not a stiff, literal translation. Do not mix in English words unless there is no natural ${language} equivalent (e.g. widely-used technical terms). Do not translate the debate topic itself if quoting it — just argue about it in ${language}.`
+      : `LANGUAGE: Write your entire response in English.`;
 
     // AI always takes the opposite stance of the user
     const aiStance = userStance === 'FOR' ? 'AGAINST' : 'FOR';
 
-    const systemInstruction = `You are ArgueBot, an elite AI debate opponent in the ArgueMate application.
+    // ── RAG: retrieve relevant KB chunks when toggled ON ──────────────────────
+    let kbContextBlock = '';
+    if (useKnowledgeBase && userId) {
+      // Use the latest user message as the retrieval query; fall back to the topic.
+      const lastUserMsg = [...(messages || [])].reverse().find((m: any) => m.role === 'user');
+      const queryText   = lastUserMsg?.content ?? topic;
+      const chunks      = await ragRetrieve(userId, queryText, 5);
+      if (chunks.length > 0) {
+        kbContextBlock = `
+
+[KNOWLEDGE BASE CONTEXT — from user's uploaded documents]
+The following excerpts are relevant to the current debate. Use them to strengthen your arguments with specific facts or evidence when appropriate. Do not quote them verbatim; weave the information naturally.
+
+${chunks.map((c, i) => `[${i + 1}] ${c}`).join('\n\n')}
+[END KNOWLEDGE BASE CONTEXT]`;
+      }
+    }
+
+    const systemInstruction = `You are ArgueBot, a debate opponent in the EdQuanta app.
 
 TOPIC: "${topic}"
-YOUR POSITION: You are arguing ${aiStance} the motion. The user is arguing ${userStance}.
+YOUR SIDE: You are arguing ${aiStance}. The user is arguing ${userStance}.
 
 ${personalityPrompt}
 
@@ -75,19 +100,29 @@ ${stylePrompt}
 
 ${difficultyPrompt}
 
-CRITICAL RULES:
-1. ALWAYS argue from the ${aiStance} position. Never concede your core stance.
-2. Respond ONLY in plain text. No markdown headers, bullet lists, or formatting symbols.
-3. Use SIMPLE, EVERYDAY ENGLISH. Write like you're talking to a friend, not writing an essay or academic paper. No big/fancy/rare words when a simple one works just as well. No jargon unless the user used it first.
-4. Keep responses SHORT — just 3 to 4 short lines/sentences total, max. One idea per sentence. Be punchy and direct, not a wall of text.
-5. Directly rebut the user's latest point in 1 short sentence, then make your strongest counter in 1-2 short sentences.
-6. No lengthy introductions, no summaries, no padding — every sentence must land a point.
-7. Do NOT start with "I" as the first word. Use engaging openers.
-8. End with one sharp, provocative line (still plain English) that challenges the user to respond.`;
+${languagePrompt}${kbContextBlock}
 
-    // Try models in order of preference; fall back if one hits quota
+YOUR JOB:
+- Read what the user just said carefully.
+- Respond DIRECTLY to their specific point. Don't ignore what they said and go off on your own plan.
+- If they made a claim, challenge that exact claim. If they gave an example, attack that example. Stay on what they brought up.
+
+HOW TO WRITE:
+- Use plain, everyday words. Write like you're texting a friend, not giving a speech.
+- No fancy words. No big vocabulary. If a simple word works, use it.
+- Short sentences only. 3 to 4 sentences max total.
+- No bullet points, no headers, no formatting symbols — just plain text.
+- Don't pad your response. Every sentence must say something real.
+- Don't start your reply with "I".
+- End with one short question or challenge that pushes the user to reply.
+
+YOUR STANCE: Always argue ${aiStance}. Never give up your position.`;
+
+    // Try models in order of preference; fall back if one hits quota/overload
     const MODEL_PRIORITY = [
       'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
     ];
 
     // Helper: attempt a Gemini call with retry + exponential backoff
@@ -98,15 +133,19 @@ CRITICAL RULES:
         } catch (err: any) {
           const is404 = err?.message?.includes('404') || err?.message?.includes('not found');
           if (is404) throw err; // Don't retry model-not-found errors
-          const isRateLimit =
+          const isTransient =
             err?.message?.includes('429') ||
+            err?.message?.includes('503') ||
             err?.message?.includes('quota') ||
             err?.message?.includes('QUOTA') ||
             err?.message?.includes('Resource has been exhausted') ||
-            err?.status === 429;
-          if (isRateLimit && attempt < retries) {
-            // Wait 3s then 6s before retrying
-            await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+            err?.message?.includes('Service Unavailable') ||
+            err?.message?.includes('high demand') ||
+            err?.status === 429 ||
+            err?.status === 503;
+          if (isTransient && attempt < retries) {
+            // Wait 2s then 4s before retrying
+            await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
             continue;
           }
           throw err;
@@ -124,7 +163,7 @@ CRITICAL RULES:
         if (isOpening) {
           const result = await callWithRetry(() =>
             model.generateContent(
-              `Please deliver your opening argument for the debate on: "${topic}". You are arguing ${aiStance}. Make it compelling and set the tone for the debate.`
+              `Please deliver your opening argument for the debate on: "${topic}". You are arguing ${aiStance}. Make it compelling and set the tone for the debate. Remember: write it in ${language}.`
             )
           );
           responseText = result.response.text();
@@ -164,13 +203,17 @@ CRITICAL RULES:
         break;
       } catch (err: any) {
         lastError = err;
-        const isRateLimit =
+        const isTransient =
           err?.message?.includes('429') ||
+          err?.message?.includes('503') ||
           err?.message?.includes('quota') ||
           err?.message?.includes('QUOTA') ||
           err?.message?.includes('Resource has been exhausted') ||
-          err?.status === 429;
-        if (isRateLimit) {
+          err?.message?.includes('Service Unavailable') ||
+          err?.message?.includes('high demand') ||
+          err?.status === 429 ||
+          err?.status === 503;
+        if (isTransient) {
           // Try next model
           continue;
         }

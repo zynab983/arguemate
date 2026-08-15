@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
-import { Menu, X, Award } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 export default function Navbar() {
@@ -40,11 +40,9 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-text">
-              <Award className="h-4 w-4 text-text-inverse" />
-            </span>
+            <img src="/logo.png" alt="EdQuanta" className="h-8 w-8 object-contain shrink-0" />
             <span className="text-sm font-semibold tracking-tight text-text">
-              ArgueMate
+              EdQuanta
             </span>
           </Link>
 

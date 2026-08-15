@@ -14,7 +14,7 @@ class MockDatabaseClient {
     // Seed a mock user
     this.users.set('demo-user-id', {
       id: 'demo-user-id',
-      email: 'demo@arguemate.ai',
+      email: 'demo@edquanta.ai',
       name: 'Demo Debater',
       avatarUrl: null,
       points: 1250,

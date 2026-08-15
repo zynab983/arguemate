@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "tsBuildInfoFile": "/tmp/check.tsbuildinfo"
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/app/dashboard/debate/page.tsx",
+    "src/app/dashboard/debate/arena/page.tsx",
+    "src/app/api/debate/route.ts",
+    "src/app/api/evaluate/route.ts"
+  ]
+}

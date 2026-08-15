@@ -32,7 +32,7 @@ export default function Settings() {
           setName(session.user.user_metadata?.full_name || '');
 
           if (typeof window !== 'undefined') {
-            setAiStyle(localStorage.getItem('arguemate_default_ai_style') || 'Socratic');
+            setAiStyle(localStorage.getItem('edquanta_default_ai_style') || 'Socratic');
           }
         }
       } catch (err) {
@@ -63,7 +63,7 @@ export default function Settings() {
       }
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('arguemate_default_ai_style', aiStyle);
+        localStorage.setItem('edquanta_default_ai_style', aiStyle);
       }
 
       setSuccessMsg('Settings saved successfully!');

@@ -1,4 +1,4 @@
-# Connect ArgueMate to Supabase (2 steps)
+# Connect EdQuanta to Supabase (2 steps)
 
 Everything in the app already works end-to-end (evaluation, dashboard cards, history, replay).
 It currently falls back to mock storage because `.env` still has placeholder Supabase keys.

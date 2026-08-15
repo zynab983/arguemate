@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   ARGUEMATE DESIGN SYSTEM
+   EDQUANTA DESIGN SYSTEM
    Single source of truth for color, type, spacing, radius, shadow, motion,
    and z-index tokens. Every screen should consume these tokens (directly,
    or via the shared components in src/components/ui) rather than hard-coding
@@ -9,41 +9,41 @@
    ========================================================================== */
 
 @theme {
-  /* ---- Color: surfaces --------------------------------------------- */
-  --color-bg: #FAFAFA;            /* page background */
-  --color-surface: #FFFFFF;       /* card / panel background */
-  --color-surface-2: #F8F8F8;     /* secondary surface (nested panels, code, hover rows) */
-  --color-border: #E5E7EB;        /* default hairline border */
-  --color-border-strong: #D1D5DB; /* emphasized border (hover, focus-adjacent) */
+  /* ---- Color: surfaces  (Powlex dark palette) ----------------------- */
+  --color-bg: #130D1E;            /* page background — deep purple-black */
+  --color-surface: #1D1529;       /* card / panel background */
+  --color-surface-2: #261C37;     /* secondary surface (nested panels, hover rows) */
+  --color-border: #2E2245;        /* default hairline border */
+  --color-border-strong: #3D3060; /* emphasized border (hover, focus-adjacent) */
 
   /* ---- Color: text ---------------------------------------------------- */
-  --color-text: #111827;          /* primary text */
-  --color-text-secondary: #6B7280;/* secondary text */
-  --color-text-muted: #9CA3AF;    /* muted / placeholder text */
-  --color-text-inverse: #FFFFFF;  /* text on solid accent/dark surfaces */
+  --color-text: #FCF3EF;          /* primary text — Powlex warm cream */
+  --color-text-secondary: #B8A9A0;/* secondary text — warm muted */
+  --color-text-muted: #7A6B65;    /* muted / placeholder text */
+  --color-text-inverse: #130D1E;  /* text on light/accent surfaces */
 
   /* ---- Color: accent (primary brand action) ---------------------------- */
-  --color-accent: #2563EB;
-  --color-accent-hover: #1D4ED8;
-  --color-accent-active: #1E40AF;
-  --color-accent-subtle: #EFF6FF; /* accent-tinted background (badges, selected state) */
-  --color-accent-border: #BFDBFE;
+  --color-accent: #C9A48B;        /* warm earthy — Powlex signature tone */
+  --color-accent-hover: #D1B6A9;  /* lighter warm on hover */
+  --color-accent-active: #A57F81; /* muted rose on active */
+  --color-accent-subtle: #261C37; /* accent-tinted dark surface */
+  --color-accent-border: #3D3060; /* subtle warm border */
 
   /* ---- Color: semantic states ------------------------------------------ */
-  --color-success: #16A34A;
-  --color-success-subtle: #F0FDF4;
-  --color-success-border: #BBF7D0;
+  --color-success: #4ADE80;
+  --color-success-subtle: #0F2820;
+  --color-success-border: #1A4030;
 
-  --color-warning: #F59E0B;
-  --color-warning-subtle: #FFFBEB;
-  --color-warning-border: #FDE68A;
+  --color-warning: #FCD34D;
+  --color-warning-subtle: #271F0A;
+  --color-warning-border: #403010;
 
-  --color-danger: #DC2626;
-  --color-danger-subtle: #FEF2F2;
-  --color-danger-border: #FECACA;
+  --color-danger: #F87171;
+  --color-danger-subtle: #2D0F0F;
+  --color-danger-border: #5C1A1A;
 
   /* ---- Typography -------------------------------------------------- */
-  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-outfit), var(--font-inter), Outfit, Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   /* ---- Radius (per spec: cards 12 / buttons+inputs 10 / badges pill) --- */
   --radius-xs: 6px;
@@ -53,11 +53,11 @@
   --radius-card: 12px;
   --radius-badge: 999px;
 
-  /* ---- Shadow: subtle by default, reserved for hover/elevation --------- */
-  --shadow-xs: 0 1px 2px 0 rgb(17 24 39 / 0.03);
-  --shadow-sm: 0 1px 3px 0 rgb(17 24 39 / 0.06), 0 1px 2px -1px rgb(17 24 39 / 0.04);
-  --shadow-md: 0 8px 24px -4px rgb(17 24 39 / 0.08), 0 2px 6px -2px rgb(17 24 39 / 0.05);
-  --shadow-lg: 0 16px 40px -8px rgb(17 24 39 / 0.12), 0 4px 12px -4px rgb(17 24 39 / 0.06);
+  /* ---- Shadow: adjusted for dark theme --------------------------------- */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.20);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.30), 0 1px 2px -1px rgb(0 0 0 / 0.20);
+  --shadow-md: 0 8px 24px -4px rgb(0 0 0 / 0.40), 0 2px 6px -2px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.50), 0 4px 12px -4px rgb(0 0 0 / 0.30);
 
   /* ---- Layout widths ------------------------------------------------ */
   --width-content: 72rem;   /* 1152px — standard page/section max-width */
@@ -122,6 +122,7 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
     border-radius: var(--radius-xs);
+    outline-color: #C9A48B;
   }
 
   textarea {
@@ -131,8 +132,8 @@
 
 /* ==========================================================================
    Type scale utilities (Display / Heading / Subheading / Body / Caption)
-   Use these instead of ad-hoc text-*/font-* combinations so every screen
-   shares one reading rhythm.
+   Use these class utilities instead of ad-hoc Tailwind font combinations so
+   every screen shares one consistent reading rhythm.
    ========================================================================== */
 @utility text-display {
   font-size: 2.5rem;

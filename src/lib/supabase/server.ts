@@ -9,7 +9,7 @@ export async function createClient() {
     return {
       auth: {
         getSession: async () => {
-          const mockCookie = cookieStore.get('arguemate-mock-token');
+          const mockCookie = cookieStore.get('edquanta-mock-token');
           if (mockCookie && mockCookie.value === 'mock-jwt-token') {
             return {
               data: {
@@ -17,7 +17,7 @@ export async function createClient() {
                   access_token: 'mock-jwt-token',
                   user: {
                     id: 'demo-user-id',
-                    email: 'demo@arguemate.ai',
+                    email: 'demo@edquanta.ai',
                     user_metadata: { 
                       full_name: 'Demo Debater',
                       avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
@@ -31,7 +31,7 @@ export async function createClient() {
           return { data: { session: null }, error: null };
         },
         getUser: async () => {
-          const mockCookie = cookieStore.get('arguemate-mock-token');
+          const mockCookie = cookieStore.get('edquanta-mock-token');
           if (mockCookie && mockCookie.value === 'mock-jwt-token') {
             return {
               data: {
@@ -51,11 +51,11 @@ export async function createClient() {
         },
         signOut: async () => {
           // Clear mock cookie by setting expiry in past
-          cookieStore.delete('arguemate-mock-token');
+          cookieStore.delete('edquanta-mock-token');
           return { error: null };
         },
         exchangeCodeForSession: async (code: string) => {
-          cookieStore.set('arguemate-mock-token', 'mock-jwt-token', {
+          cookieStore.set('edquanta-mock-token', 'mock-jwt-token', {
             path: '/',
             maxAge: 86400,
             sameSite: 'lax',

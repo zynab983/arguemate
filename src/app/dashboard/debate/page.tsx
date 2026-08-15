@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Cpu,
@@ -21,11 +21,18 @@ import {
   Flame,
   Bot,
   Sparkles,
+  Database,
+  ToggleLeft,
+  ToggleRight,
+  Languages,
+  Users,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Input';
 import { ErrorState } from '@/components/ui/EmptyState';
+import { supabase } from '@/lib/supabase/client';
+import Link from 'next/link';
 
 const CATEGORIES = [
   { name: 'Technology', icon: Cpu },
@@ -97,6 +104,15 @@ const AI_PERSONALITIES = [
   { id: 'Neutral', icon: Scale, label: 'Neutral', desc: 'Balanced perspectives. Nuanced middle ground. Intellectual humility.' },
 ];
 
+const LANGUAGES = [
+  { id: 'English', label: 'English', native: 'English' },
+  { id: 'Hindi', label: 'Hindi', native: 'हिन्दी' },
+  { id: 'Kannada', label: 'Kannada', native: 'ಕನ್ನಡ' },
+  { id: 'Telugu', label: 'Telugu', native: 'తెలుగు' },
+  { id: 'Malayalam', label: 'Malayalam', native: 'മലയാളം' },
+  { id: 'Spanish', label: 'Spanish', native: 'Español' },
+];
+
 function StepLabel({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <label className="flex items-center gap-2 text-caption text-text-secondary uppercase">
@@ -117,8 +133,28 @@ export default function StartDebate() {
   const [difficulty, setDifficulty] = useState('Intermediate');
   const [debateStyle, setDebateStyle] = useState('Formal');
   const [aiPersonality, setAiPersonality] = useState('Logical');
+  const [language, setLanguage] = useState('English');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Knowledge Base toggle
+  const [useKb, setUseKb] = useState(false);
+  const [kbDocCount, setKbDocCount] = useState(0);
+
+  // Check whether the user has any KB documents to decide whether to show the toggle
+  useEffect(() => {
+    async function checkKB() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      try {
+        const res  = await fetch(`/api/kb/documents?userId=${session.user.id}`);
+        const data = await res.json();
+        setKbDocCount((data.documents ?? []).length);
+      } catch {
+        // non-fatal — just hide the toggle
+      }
+    }
+    checkKB();
+  }, []);
 
   const handlePresetSelect = (title: string, cat: string) => {
     setTopic(title);
@@ -145,6 +181,8 @@ export default function StartDebate() {
       difficulty,
       style: debateStyle,
       personality: aiPersonality,
+      language,
+      ...(useKb ? { useKb: '1' } : {}),
     });
 
     router.push(`/dashboard/debate/arena?${params.toString()}`);
@@ -169,10 +207,19 @@ export default function StartDebate() {
           <h1 className="text-heading text-text">Configure your debate</h1>
           <p className="text-body text-text-secondary mt-1">Choose your topic, style, and AI opponent before entering the debate arena.</p>
         </div>
-        <div className="hidden sm:flex items-center gap-2 rounded-input border border-border bg-surface px-4 py-2">
-          <Bot className="h-4 w-4 text-text-secondary" />
-          <span className="text-caption text-text-secondary">ArgueBot ready</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-success" />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/rooms/new"
+            className="hidden sm:flex items-center gap-2 rounded-input border border-border bg-surface px-4 py-2 text-caption text-text-secondary hover:border-border-strong hover:text-text transition-colors duration-150"
+          >
+            <Users className="h-4 w-4" />
+            Group Debate
+          </Link>
+          <div className="hidden sm:flex items-center gap-2 rounded-input border border-border bg-surface px-4 py-2">
+            <Bot className="h-4 w-4 text-text-secondary" />
+            <span className="text-caption text-text-secondary">ArgueBot ready</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+          </div>
         </div>
       </div>
 
@@ -352,6 +399,71 @@ export default function StartDebate() {
             })}
           </div>
         </Card>
+
+        {/* Step 7: Debate Language */}
+        <Card className="p-6 space-y-4">
+          <StepLabel n={7}>
+            <Languages className="h-3.5 w-3.5 mr-1" />
+            Debate Language
+          </StepLabel>
+          <p className="text-xs text-text-secondary -mt-2">
+            ArgueBot will argue with you entirely in the language you pick below.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {LANGUAGES.map((lang) => {
+              const isSelected = language === lang.id;
+              return (
+                <button
+                  key={lang.id}
+                  type="button"
+                  onClick={() => setLanguage(lang.id)}
+                  className={`flex flex-col items-center gap-1 rounded-input p-3 text-center border text-xs font-semibold transition-colors duration-150 ${
+                    isSelected
+                      ? 'border-accent bg-accent-subtle text-accent-hover'
+                      : 'border-border bg-surface text-text-secondary hover:border-border-strong hover:text-text'
+                  }`}
+                >
+                  <span>{lang.label}</span>
+                  <span className="text-[10px] font-normal text-text-muted">{lang.native}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Step 8: Knowledge Base (only shown if user has documents) */}
+        {kbDocCount > 0 && (
+          <Card className="p-6 space-y-4">
+            <StepLabel n={8}>
+              <Database className="h-3.5 w-3.5 mr-1" />
+              Knowledge Base
+            </StepLabel>
+            <p className="text-xs text-text-secondary">
+              You have <strong className="text-text">{kbDocCount}</strong> document{kbDocCount !== 1 ? 's' : ''} indexed.
+              When enabled, ArgueBot will retrieve the most relevant excerpts from your uploads to inform the debate.
+            </p>
+            <button
+              type="button"
+              onClick={() => setUseKb(v => !v)}
+              className={`w-full flex items-center justify-between gap-4 rounded-input border p-4 text-left transition-colors duration-150 ${
+                useKb
+                  ? 'border-accent bg-accent-subtle'
+                  : 'border-border bg-surface hover:border-border-strong'
+              }`}
+            >
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-text">Use Knowledge Base</p>
+                <p className="text-xs text-text-secondary">
+                  {useKb ? 'ArgueBot will reference your uploaded documents.' : 'Standard debate — no document context.'}
+                </p>
+              </div>
+              {useKb
+                ? <ToggleRight className="h-7 w-7 text-accent shrink-0" />
+                : <ToggleLeft  className="h-7 w-7 text-text-muted shrink-0" />
+              }
+            </button>
+          </Card>
+        )}
 
         {error && <ErrorState description={error} />}
 
