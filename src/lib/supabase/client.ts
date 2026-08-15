@@ -13,18 +13,18 @@ export const isMockAuth = !supabaseUrl || !supabaseAnonKey ||
 class MockAuthClient {
   private getSessionData() {
     if (typeof window === 'undefined') return null;
-    const session = localStorage.getItem('arguemate_session');
+    const session = localStorage.getItem('edquanta_session');
     return session ? JSON.parse(session) : null;
   }
 
   private setSessionData(session: any) {
     if (typeof window === 'undefined') return;
     if (session) {
-      localStorage.setItem('arguemate_session', JSON.stringify(session));
-      document.cookie = `arguemate-mock-token=${session.access_token}; path=/; max-age=86400; SameSite=Lax;`;
+      localStorage.setItem('edquanta_session', JSON.stringify(session));
+      document.cookie = `edquanta-mock-token=${session.access_token}; path=/; max-age=86400; SameSite=Lax;`;
     } else {
-      localStorage.removeItem('arguemate_session');
-      document.cookie = 'arguemate-mock-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;';
+      localStorage.removeItem('edquanta_session');
+      document.cookie = 'edquanta-mock-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;';
     }
   }
 

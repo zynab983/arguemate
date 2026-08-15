@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
     let isAuthenticated = false;
 
     if (isMock) {
-      const mockCookie = request.cookies.get('arguemate-mock-token');
+      const mockCookie = request.cookies.get('edquanta-mock-token');
       if (mockCookie && mockCookie.value === 'mock-jwt-token') {
         isAuthenticated = true;
       }
@@ -69,7 +69,7 @@ export async function proxy(request: NextRequest) {
     let isAuthenticated = false;
 
     if (isMock) {
-      const mockCookie = request.cookies.get('arguemate-mock-token');
+      const mockCookie = request.cookies.get('edquanta-mock-token');
       if (mockCookie && mockCookie.value === 'mock-jwt-token') {
         isAuthenticated = true;
       }

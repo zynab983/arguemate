@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { topic, messages, userStance, difficulty, debateStyle, aiPersonality } = body;
+    const { topic, messages, userStance, difficulty, debateStyle, aiPersonality, language = 'English' } = body;
 
     if (!messages || messages.length < 2) {
       return Response.json({ error: 'Not enough messages to evaluate.' }, { status: 400 });
@@ -70,6 +70,10 @@ Evaluate the USER's performance across these 6 dimensions (each score out of 100
 6. Relevance - how well arguments stayed on-topic
 
 Then determine the winner based on argument quality (not word count).
+
+${language && language !== 'English'
+  ? `LANGUAGE: The debate above was conducted in ${language}. Write all text fields (strengths, weaknesses, suggestions, bestArgument, summary, and fallacies) in natural, everyday ${language} — not a literal translation. Keep "grade" and "winner" exactly as specified below (those stay in their fixed format, not translated).`
+  : `LANGUAGE: Write all text fields in English.`}
 
 Respond ONLY with a valid JSON object in this exact format (no markdown, no explanation, just raw JSON):
 {

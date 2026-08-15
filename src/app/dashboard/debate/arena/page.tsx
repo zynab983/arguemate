@@ -8,11 +8,12 @@ import {
   Flag, AlertCircle, RefreshCcw, Sparkles, Brain, Heart, Swords,
   Scale, GraduationCap, Coffee, Landmark, Mic, MicOff, CheckCircle2,
   XCircle, Lightbulb, Star, Target, TrendingUp, MessageSquare,
-  AlertTriangle, ChevronRight, Volume2, VolumeX, ListTree, Gauge,
+  AlertTriangle, ChevronRight, Volume2, VolumeX, ListTree, Gauge, Share2, Languages,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import ShareTranscriptModal from '@/components/ShareTranscriptModal';
 
 // Minimal typing for the Web Speech API (not in default TS lib.dom.d.ts)
 interface SpeechRecognitionResultLike {
@@ -162,6 +163,7 @@ function EvaluationResults({
   onNewDebate: () => void;
   onViewHistory: () => void;
 }) {
+  const [showShare, setShowShare] = useState(false);
   const gc = gradeClasses(evaluation.grade);
   const winnerTone = evaluation.winner === 'User' ? 'success' : evaluation.winner === 'AI' ? 'danger' : 'neutral';
 
@@ -335,6 +337,15 @@ function EvaluationResults({
         </div>
       )}
 
+      {/* Share Transcript button */}
+      <button
+        id="share-transcript-btn"
+        onClick={() => setShowShare(true)}
+        className="w-full flex items-center justify-center gap-2 rounded-input border border-border bg-surface-2 px-4 py-2.5 text-sm font-semibold text-text-secondary hover:text-text hover:bg-surface hover:border-border-strong transition-all duration-150"
+      >
+        <Share2 className="h-4 w-4" /> Share Transcript
+      </button>
+
       <div className="flex gap-3 pb-8">
         <Button onClick={onNewDebate} fullWidth leftIcon={<Zap className="h-4 w-4" />}>
           New Debate
@@ -343,6 +354,24 @@ function EvaluationResults({
           View History
         </Button>
       </div>
+
+      {/* Share Transcript Modal */}
+      {showShare && (
+        <ShareTranscriptModal
+          messages={messages}
+          meta={{
+            topic,
+            difficulty,
+            debateStyle,
+            aiPersonality,
+            score: evaluation.overall,
+            grade: evaluation.grade,
+            winner: evaluation.winner,
+            duration,
+          }}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 }
@@ -413,6 +442,10 @@ function DebateArenaContent() {
   const aiPersonality = searchParams.get('aiPersonality') || 'Logical';
   const userStance = (searchParams.get('userStance') || 'FOR') as 'FOR' | 'AGAINST';
   const aiStance = userStance === 'FOR' ? 'AGAINST' : 'FOR';
+  // Language ArgueBot should argue in (defaults to English)
+  const language = searchParams.get('language') || 'English';
+  // Knowledge Base: read the toggle param set by the debate setup page
+  const useKnowledgeBase = searchParams.get('useKb') === '1';
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -425,6 +458,8 @@ function DebateArenaContent() {
   const [duration, setDuration] = useState(0);
   const [saving, setSaving] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // userId resolved once at mount; used for KB retrieval
+  const userIdRef = useRef<string>('');
 
   // Voice: mic input (speech-to-text)
   const [isListening, setIsListening] = useState(false);
@@ -527,6 +562,13 @@ function DebateArenaContent() {
     window.speechSynthesis.speak(utterance);
   }, [ttsSupported, voiceOutputEnabled]);
 
+  // Resolve userId once (used for KB retrieval and debate saving)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      userIdRef.current = session?.user?.id || 'demo-user-id';
+    });
+  }, []);
+
   // Opening argument
   useEffect(() => {
     async function startDebate() {
@@ -534,7 +576,12 @@ function DebateArenaContent() {
         const res = await fetch('/api/debate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, difficulty, debateStyle, aiPersonality, messages: [], isOpening: true, userStance }),
+          body: JSON.stringify({
+            topic, difficulty, debateStyle, aiPersonality, language,
+            messages: [], isOpening: true, userStance,
+            useKnowledgeBase,
+            userId: userIdRef.current,
+          }),
         });
         if (!res.ok) {
           const err = await res.json();
@@ -574,7 +621,12 @@ function DebateArenaContent() {
       const res = await fetch('/api/debate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, difficulty, debateStyle, aiPersonality, messages: apiMessages, isOpening: false, userStance }),
+        body: JSON.stringify({
+          topic, difficulty, debateStyle, aiPersonality, language,
+          messages: apiMessages, isOpening: false, userStance,
+          useKnowledgeBase,
+          userId: userIdRef.current,
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -617,7 +669,7 @@ function DebateArenaContent() {
       const res = await fetch('/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, messages: apiMessages, userStance, difficulty, debateStyle, aiPersonality }),
+        body: JSON.stringify({ topic, messages: apiMessages, userStance, difficulty, debateStyle, aiPersonality, language }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -652,8 +704,7 @@ function DebateArenaContent() {
 
       setSaving(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id || 'demo-user-id';
+        const userId = userIdRef.current || 'demo-user-id';
         await fetch('/api/debates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -749,6 +800,7 @@ function DebateArenaContent() {
               <Badge tone="neutral"><StyleIcon className="h-3 w-3" />{debateStyle}</Badge>
               <Badge tone={difficulty === 'Advanced' ? 'danger' : difficulty === 'Intermediate' ? 'neutral' : 'success'}>{difficulty}</Badge>
               <Badge tone={userStance === 'FOR' ? 'success' : 'danger'}>You: {userStance}</Badge>
+              {language !== 'English' && <Badge tone="accent"><Languages className="h-3 w-3" />{language}</Badge>}
             </div>
             <p className="text-xs text-text-muted truncate mt-1 max-w-md">{topic}</p>
           </div>

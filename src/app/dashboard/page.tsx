@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Brain,
   Calendar,
-  Zap
+  Zap,
+  Users
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -100,10 +101,15 @@ export default function DashboardOverview() {
           <p className="text-body text-text-secondary">
             Ready to test your persuasion skills? Launch a new session, select your stance, and challenge ArgueBot.
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap gap-3">
             <Link href="/dashboard/debate">
               <Button rightIcon={<ArrowRight className="h-4 w-4" />}>
                 Start New Debate
+              </Button>
+            </Link>
+            <Link href="/dashboard/rooms/new">
+              <Button variant="secondary" leftIcon={<Users className="h-4 w-4" />}>
+                Group Debate
               </Button>
             </Link>
           </div>

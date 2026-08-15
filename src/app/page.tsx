@@ -124,7 +124,7 @@ export default function Home() {
                 Ready to level up your critical thinking?
               </h2>
               <p className="text-body text-text-secondary">
-                Join students and professionals worldwide who use ArgueMate daily to refine their debate abilities.
+                Join students and professionals worldwide who use EdQuanta daily to refine their debate abilities.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/signup">
